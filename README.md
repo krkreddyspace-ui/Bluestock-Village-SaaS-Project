@@ -64,4 +64,4 @@ npm run import-data
 - `GET /v1/autocomplete?q=...`: Search for villages (Requires API Key)
 
 ---
-*Created by Antigravity for Bluestock.*
+*Created by Kota Radha Krishna Reddy.*
