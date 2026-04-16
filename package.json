@@ -1,0 +1,22 @@
+{
+  "name": "bluestock-village-saas",
+  "version": "1.0.0",
+  "description": "India's village-level geographical data SaaS platform",
+  "private": true,
+  "workspaces": [
+    "api",
+    "dashboard"
+  ],
+  "scripts": {
+    "api:dev": "npm run dev --workspace=api",
+    "dashboard:dev": "npm run dev --workspace=dashboard",
+    "dev": "concurrently \"npm run api:dev\" \"npm run dashboard:dev\"",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "import-data": "python scripts/import_data.py"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "prisma": "^5.11.0"
+  }
+}

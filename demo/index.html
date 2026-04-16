@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bluestock API Demo - Contact Form</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Outfit', sans-serif; }
+        .autocomplete-results { display: none; }
+        .autocomplete-results.active { display: block; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-6">
+
+    <div class="max-w-2xl w-full bg-white rounded-3xl shadow-2xl shadow-slate-200/60 overflow-hidden border border-slate-100">
+        <div class="bg-indigo-600 p-8 text-white relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-8 opacity-10">
+                <i data-lucide="globe" class="w-32 h-32"></i>
+            </div>
+            <div class="relative z-10">
+                <h1 class="text-3xl font-bold">Contact Us</h1>
+                <p class="text-indigo-100 mt-2">Integrating our Village API for address validation.</p>
+            </div>
+        </div>
+
+        <form class="p-8 space-y-6" id="contactForm">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="text-sm font-semibold text-slate-700">Full Name</label>
+                    <input type="text" placeholder="John Doe" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-semibold text-slate-700">Email Address</label>
+                    <input type="email" placeholder="john@example.com" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                </div>
+            </div>
+
+            <div class="space-y-4 pt-4 border-t border-slate-100">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="map-pin" class="w-5 h-5 text-indigo-600"></i>
+                    Address Details
+                </h3>
+
+                <div class="relative">
+                    <label class="text-sm font-semibold text-slate-700">Village / Locality</label>
+                    <div class="relative mt-1">
+                        <i data-lucide="search" class="absolute left-3 top-3.5 w-5 h-5 text-slate-400"></i>
+                        <input 
+                            type="text" 
+                            id="villageSearch"
+                            placeholder="Type to search (e.g. Manibeli)" 
+                            class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                            autocomplete="off"
+                        >
+                    </div>
+                    
+                    <!-- Autocomplete Dropdown -->
+                    <div id="results" class="autocomplete-results absolute z-20 w-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-100 max-h-64 overflow-y-auto">
+                        <!-- Suggestions will appear here -->
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Sub-District</label>
+                        <input type="text" id="subDistrict" readonly class="w-full px-4 py-2 rounded-lg bg-slate-50 border border-slate-100 text-slate-600 focus:outline-none" placeholder="Auto-filled">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">District</label>
+                        <input type="text" id="district" readonly class="w-full px-4 py-2 rounded-lg bg-slate-50 border border-slate-100 text-slate-600 focus:outline-none" placeholder="Auto-filled">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">State</label>
+                        <input type="text" id="state" readonly class="w-full px-4 py-2 rounded-lg bg-slate-50 border border-slate-100 text-slate-600 focus:outline-none" placeholder="Auto-filled">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Country</label>
+                        <input type="text" value="India" readonly class="w-full px-4 py-2 rounded-lg bg-slate-50 border border-slate-100 text-slate-600 focus:outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2">
+                Send Message
+                <i data-lucide="send" class="w-5 h-5"></i>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        const searchInput = document.getElementById('villageSearch');
+        const resultsBox = document.getElementById('results');
+        const API_KEY = 'bsk_f1068832a514d02196696b998341258d3493e8784d0097fc';
+        const API_BASE = 'http://localhost:3000/v1';
+
+        let debounceTimer;
+
+        searchInput.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            if (val.length < 2) {
+                resultsBox.classList.remove('active');
+                return;
+            }
+
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/autocomplete?q=${val}`, {
+                        headers: { 'x-api-key': API_KEY }
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success && result.data.length > 0) {
+                        resultsBox.innerHTML = result.data.map(item => `
+                            <div class="p-4 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-0 transition-colors" 
+                                 onclick="selectVillage('${item.label}', '${item.hierarchy.subDistrict}', '${item.hierarchy.district}', '${item.hierarchy.state}')">
+                                <div class="font-bold text-slate-800">${item.label}</div>
+                                <div class="text-sm text-slate-400">${item.subtext}</div>
+                            </div>
+                        `).join('');
+                        resultsBox.classList.add('active');
+                    } else {
+                        resultsBox.innerHTML = '<div class="p-4 text-slate-400 text-sm italic">No villages found</div>';
+                        resultsBox.classList.add('active');
+                    }
+                } catch (error) {
+                    console.error('API Error:', error);
+                }
+            }, 300);
+        });
+
+        window.selectVillage = (village, sub, dist, state) => {
+            searchInput.value = village;
+            document.getElementById('subDistrict').value = sub;
+            document.getElementById('district').value = dist;
+            document.getElementById('state').value = state;
+            resultsBox.classList.remove('active');
+        };
+
+        // Close results on click outside
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !resultsBox.contains(e.target)) {
+                resultsBox.classList.remove('active');
+            }
+        });
+
+        document.getElementById('contactForm').onsubmit = (e) => {
+            e.preventDefault();
+            alert('Form submitted successfully with live validated data from Bluestock Village API!');
+        };
+    </script>
+</body>
+</html>
